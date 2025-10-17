@@ -1,0 +1,1126 @@
+import React, { useState } from 'react';
+import { Plus, Minus, Download, Calendar, Users, Plane, Hotel, MapPin } from 'lucide-react';
+
+const ItineraryBuilder = () => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    clientName: '',
+    destination: '',
+    departureFrom: '',
+    departureDate: '',
+    arrivalDate: '',
+    totalTravelers: 4,
+    days: [
+      {
+        date: '27th November',
+        title: 'Arrival in Singapore & City Exploration',
+        morning: 'Arrive in Singapore. Transfer From Airport To Hotel.',
+        afternoon: 'Check Into Your Hotel.\nVisit Marina Bay Sands Sky Park (2-3 Hours).\nOptional: Stroll Along Marina Bay Waterfront Promenade Or Helix Bridge.',
+        evening: 'Explore Gardens By The Bay, Including Super Tree Grove (3-4 Hours).'
+      }
+    ],
+    flights: [
+      { date: 'Thu 10 Jan 24', airline: 'Fly Air India (AX-123)', route: 'From Delhi (DEL) To Singapore (SIN).' }
+    ],
+    hotels: [
+      {
+        city: 'Singapore',
+        checkIn: '24/02/2024',
+        checkOut: '24/02/2024',
+        nights: 2,
+        hotelName: 'Super Townhouse Oak Vashi Formerly Blue Diamond'
+      }
+    ],
+    inclusions: {
+      flights: 2,
+      touristTax: 2,
+      hotels: 2,
+      transfers: true,
+      activities: true
+    },
+    payment: {
+      total: 900000,
+      installments: [
+        { name: 'Installment 1', amount: 350000, dueDate: 'Initial Payment' },
+        { name: 'Installment 2', amount: 400000, dueDate: 'Post Visa Approval' },
+        { name: 'Installment 3', amount: 0, dueDate: '20 Days Before Departure' }
+      ]
+    }
+  });
+
+  const addDay = () => {
+    setFormData({
+      ...formData,
+      days: [
+        ...formData.days,
+        {
+          date: '',
+          title: '',
+          morning: '',
+          afternoon: '',
+          evening: ''
+        }
+      ]
+    });
+  };
+
+  const removeDay = (index) => {
+    const newDays = formData.days.filter((_, i) => i !== index);
+    setFormData({ ...formData, days: newDays });
+  };
+
+  const updateDay = (index, field, value) => {
+    const newDays = [...formData.days];
+    newDays[index][field] = value;
+    setFormData({ ...formData, days: newDays });
+  };
+
+  const addFlight = () => {
+    setFormData({
+      ...formData,
+      flights: [...formData.flights, { date: '', airline: '', route: '' }]
+    });
+  };
+
+  const addHotel = () => {
+    setFormData({
+      ...formData,
+      hotels: [...formData.hotels, { city: '', checkIn: '', checkOut: '', nights: 0, hotelName: '' }]
+    });
+  };
+
+  const generatePDF = () => {
+    const printWindow = window.open('', '_blank');
+    const content = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Singapore Itinerary - ${formData.clientName}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+      color: #1a1a1a;
+      background: white;
+      line-height: 1.5;
+    }
+    .page { 
+      width: 210mm;
+      margin: 0 auto;
+      background: white;
+      padding: 15mm;
+      page-break-after: always;
+    }
+    .header {
+      background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+      color: white;
+      padding: 40px 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .logo { 
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      letter-spacing: -1px;
+    }
+    .logo .viago { color: #fff; }
+    .logo .via { color: #A78BFA; }
+    .tagline { 
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      opacity: 0.9;
+      margin-bottom: 25px;
+    }
+    .header h1 { 
+      font-size: 32px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .header .subtitle { 
+      font-size: 18px;
+      font-weight: 300;
+      margin-bottom: 15px;
+    }
+    .icons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+      font-size: 20px;
+    }
+    .trip-info {
+      background: #F8F9FA;
+      padding: 20px 25px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 15px;
+      border: 1px solid #E5E7EB;
+    }
+    .info-item {
+      text-align: center;
+    }
+    .info-label {
+      font-size: 11px;
+      color: #6B7280;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 13px;
+      color: #1F2937;
+      font-weight: 600;
+    }
+    .day-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 25px;
+      page-break-inside: avoid;
+    }
+    .day-label {
+      background: #2D1B69;
+      color: white;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      padding: 15px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      min-width: 50px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .day-content {
+      flex: 1;
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .day-header {
+      background: #F9FAFB;
+      padding: 15px 20px;
+      border-bottom: 2px solid #E5E7EB;
+    }
+    .day-date {
+      font-size: 16px;
+      font-weight: 700;
+      color: #2D1B69;
+      margin-bottom: 3px;
+    }
+    .day-title {
+      font-size: 12px;
+      color: #6B7280;
+      font-weight: 500;
+    }
+    .timeline {
+      padding: 20px;
+    }
+    .timeline-item {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 25px;
+      bottom: -15px;
+      width: 2px;
+      background: #E5E7EB;
+    }
+    .timeline-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      border: 3px solid #7B68EE;
+      flex-shrink: 0;
+      margin-top: 2px;
+      z-index: 1;
+    }
+    .timeline-content {
+      flex: 1;
+    }
+    .timeline-time {
+      font-size: 13px;
+      font-weight: 700;
+      color: #2D1B69;
+      margin-bottom: 6px;
+    }
+    .timeline-text {
+      font-size: 12px;
+      color: #4B5563;
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1F2937;
+      margin: 35px 0 20px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #7B68EE;
+    }
+    .table-container {
+      background: white;
+      border: 1px solid #E5E7EB;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 25px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      background: #2D1B69;
+      color: white;
+      padding: 12px 15px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td {
+      padding: 12px 15px;
+      font-size: 12px;
+      color: #4B5563;
+      border-bottom: 1px solid #F3F4F6;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:nth-child(even) {
+      background: #F9FAFB;
+    }
+    .payment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .payment-card {
+      background: white;
+      border: 2px solid #E5E7EB;
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+    }
+    .payment-title {
+      font-size: 11px;
+      color: #6B7280;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .payment-amount {
+      font-size: 22px;
+      font-weight: 700;
+      color: #2D1B69;
+      margin-bottom: 6px;
+    }
+    .payment-due {
+      font-size: 11px;
+      color: #6B7280;
+    }
+    .total-section {
+      background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    .total-label {
+      font-size: 13px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+    .total-amount {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .footer {
+      background: #F9FAFB;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #E5E7EB;
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .company-info {
+      font-size: 10px;
+      color: #6B7280;
+      line-height: 1.6;
+    }
+    .company-name {
+      font-weight: 700;
+      color: #2D1B69;
+      margin-bottom: 3px;
+    }
+    @media print {
+      .page { margin: 0; padding: 15mm; }
+      body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div class="logo"><span class="viago">viago</span><span class="via">via</span></div>
+      <div class="tagline">PLAN.PACK.GO</div>
+      <h1>Hi, ${formData.clientName}!</h1>
+      <div class="subtitle">${formData.destination} Itinerary</div>
+      <div class="subtitle">${formData.days.length} Days ${formData.days.length - 1} Nights</div>
+      <div class="icons">✈️ 🏨 🎫 🚗 🎭</div>
+    </div>
+
+    <div class="trip-info">
+      <div class="info-item">
+        <div class="info-label">Departure From</div>
+        <div class="info-value">${formData.departureFrom}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Departure</div>
+        <div class="info-value">${formData.departureDate}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Arrival</div>
+        <div class="info-value">${formData.arrivalDate}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Destination</div>
+        <div class="info-value">${formData.destination}</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">No. Of Travellers</div>
+        <div class="info-value">${formData.totalTravelers}</div>
+      </div>
+    </div>
+
+    ${formData.days.map((day, index) => `
+      <div class="day-container">
+        <div class="day-label">Day ${index + 1}</div>
+        <div class="day-content">
+          <div class="day-header">
+            <div class="day-date">${day.date}</div>
+            <div class="day-title">${day.title}</div>
+          </div>
+          <div class="timeline">
+            ${day.morning ? `
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">Morning</div>
+                  <div class="timeline-text">${day.morning}</div>
+                </div>
+              </div>
+            ` : ''}
+            ${day.afternoon ? `
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">Afternoon</div>
+                  <div class="timeline-text">${day.afternoon}</div>
+                </div>
+              </div>
+            ` : ''}
+            ${day.evening ? `
+              <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                  <div class="timeline-time">Evening</div>
+                  <div class="timeline-text">${day.evening}</div>
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+
+  <div class="page">
+    <h2 class="section-title">Flight Summary</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Flight Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${formData.flights.map(flight => `
+            <tr>
+              <td>${flight.date}</td>
+              <td><strong>${flight.airline}</strong> ${flight.route}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section-title">Hotel Bookings</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>City</th>
+            <th>Check In</th>
+            <th>Check Out</th>
+            <th>Nights</th>
+            <th>Hotel Name</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${formData.hotels.map(hotel => `
+            <tr>
+              <td>${hotel.city}</td>
+              <td>${hotel.checkIn}</td>
+              <td>${hotel.checkOut}</td>
+              <td>${hotel.nights}</td>
+              <td>${hotel.hotelName}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section-title">Inclusion Summary</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Count</th>
+            <th>Details</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Flight</td>
+            <td>${formData.inclusions.flights}</td>
+            <td>All Flights Mentioned</td>
+            <td>Awaiting Confirmation</td>
+          </tr>
+          <tr>
+            <td>Tourist Tax</td>
+            <td>${formData.inclusions.touristTax}</td>
+            <td>Yotel (Singapore), Oakwood (Sydney), etc.</td>
+            <td>Awaiting Confirmation</td>
+          </tr>
+          <tr>
+            <td>Hotel</td>
+            <td>${formData.inclusions.hotels}</td>
+            <td>Airport To Hotel · Hotel To Attractions · Day Trips If Any</td>
+            <td>Included</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section-title">Payment Plan</h2>
+    <div class="total-section">
+      <div class="total-label">Total Amount</div>
+      <div class="total-amount">₹ ${formData.payment.total.toLocaleString('en-IN')} For 3 Pax (Inclusive Of GST)</div>
+    </div>
+
+    <div class="payment-grid">
+      ${formData.payment.installments.map(inst => `
+        <div class="payment-card">
+          <div class="payment-title">${inst.name}</div>
+          <div class="payment-amount">₹${inst.amount.toLocaleString('en-IN')}</div>
+          <div class="payment-due">${inst.dueDate}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="footer">
+      <div class="company-info">
+        <div class="company-name">Vigovia Tech Pvt. Ltd</div>
+        <div>Registered Office: Hd-109 Cinnabar Hills,</div>
+        <div>Links Business Park, Karnataka, India.</div>
+      </div>
+      <div class="company-info" style="text-align: right;">
+        <div><strong>Phone:</strong> +91-9504061112</div>
+        <div><strong>Email ID:</strong> Utkarsh@Vigovia.Com</div>
+        <div><strong>CIN:</strong> U79110KA2024PTC191890</div>
+      </div>
+      <div class="logo" style="font-size: 28px;">
+        <span class="viago" style="color: #2D1B69;">viago</span><span class="via" style="color: #7B68EE;">via</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    printWindow.document.write(content);
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight">
+                <span className="text-white">viago</span>
+                <span className="text-purple-200">via</span>
+              </h1>
+              <p className="text-sm tracking-widest mt-1 text-purple-100">PLAN.PACK.GO</p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-semibold">Professional Itinerary Builder</p>
+              <p className="text-sm text-purple-100">Create stunning travel plans in minutes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex items-center justify-center gap-4 mb-8">
+          {[
+            { num: 1, label: 'Basic Info' },
+            { num: 2, label: 'Daily Itinerary' },
+            { num: 3, label: 'Flights & Hotels' },
+            { num: 4, label: 'Payment & Generate' }
+          ].map((s) => (
+            <div key={s.num} className="flex items-center">
+              <div className={`flex items-center gap-3 ${step >= s.num ? 'opacity-100' : 'opacity-40'}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                  step >= s.num ? 'bg-purple-600 text-white' : 'bg-gray-300 text-gray-600'
+                }`}>
+                  {s.num}
+                </div>
+                <span className="font-medium text-gray-700">{s.label}</span>
+              </div>
+              {s.num < 4 && <div className="w-16 h-1 bg-gray-300 mx-4" />}
+            </div>
+          ))}
+        </div>
+
+        {/* Form Content */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-5xl mx-auto">
+          {/* Step 1: Basic Information */}
+          {step === 1 && (
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <Users className="text-purple-600" />
+                  Basic Trip Information
+                </h2>
+                <p className="text-gray-600 mt-1">Let's start with the essentials</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Client Name *</label>
+                  <input
+                    type="text"
+                    value={formData.clientName}
+                    onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="Enter client name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Destination *</label>
+                  <input
+                    type="text"
+                    value={formData.destination}
+                    onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="e.g., Singapore"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Departure From *</label>
+                  <input
+                    type="text"
+                    value={formData.departureFrom}
+                    onChange={(e) => setFormData({ ...formData, departureFrom: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="e.g., Mumbai"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Travelers *</label>
+                  <input
+                    type="number"
+                    value={formData.totalTravelers}
+                    onChange={(e) => setFormData({ ...formData, totalTravelers: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    min="1"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Departure Date *</label>
+                  <input
+                    type="text"
+                    value={formData.departureDate}
+                    onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="31/10/2025"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Arrival Date *</label>
+                  <input
+                    type="text"
+                    value={formData.arrivalDate}
+                    onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    placeholder="01/11/2025"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => setStep(2)}
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
+              >
+                Continue to Daily Itinerary →
+              </button>
+            </div>
+          )}
+
+          {/* Step 2: Daily Itinerary */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <div className="border-b pb-4 flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <MapPin className="text-purple-600" />
+                    Daily Itinerary
+                  </h2>
+                  <p className="text-gray-600 mt-1">Plan activities for each day</p>
+                </div>
+                <button
+                  onClick={addDay}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2"
+                >
+                  <Plus size={20} /> Add Day
+                </button>
+              </div>
+
+              <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
+                {formData.days.map((day, index) => (
+                  <div key={index} className="border-2 border-gray-200 rounded-xl p-6 bg-gray-50">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-lg font-bold text-purple-700">Day {index + 1}</h3>
+                      {formData.days.length > 1 && (
+                        <button
+                          onClick={() => removeDay(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Minus size={20} />
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <input
+                          type="text"
+                          value={day.date}
+                          onChange={(e) => updateDay(index, 'date', e.target.value)}
+                          placeholder="Date (e.g., 27th November)"
+                          className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={day.title}
+                          onChange={(e) => updateDay(index, 'title', e.target.value)}
+                          placeholder="Day Title"
+                          className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <textarea
+                        value={day.morning}
+                        onChange={(e) => updateDay(index, 'morning', e.target.value)}
+                        placeholder="Morning activities..."
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        rows="2"
+                      />
+
+                      <textarea
+                        value={day.afternoon}
+                        onChange={(e) => updateDay(index, 'afternoon', e.target.value)}
+                        placeholder="Afternoon activities..."
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        rows="2"
+                      />
+
+                      <textarea
+                        value={day.evening}
+                        onChange={(e) => updateDay(index, 'evening', e.target.value)}
+                        placeholder="Evening activities..."
+                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        rows="2"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep(1)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
+                >
+                  Continue to Flights & Hotels →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Flights & Hotels */}
+          {step === 3 && (
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <Plane className="text-purple-600" />
+                  Flights & Hotels
+                </h2>
+                <p className="text-gray-600 mt-1">Add flight and accommodation details</p>
+              </div>
+
+              {/* Flights Section */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-700">Flight Details</h3>
+                  <button
+                    onClick={addFlight}
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 flex items-center gap-2 text-sm"
+                  >
+                    <Plus size={18} /> Add Flight
+                  </button>
+                </div>
+
+                <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
+                  {formData.flights.map((flight, index) => (
+                    <div key={index} className="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <input
+                        type="text"
+                        value={flight.date}
+                        onChange={(e) => {
+                          const newFlights = [...formData.flights];
+                          newFlights[index].date = e.target.value;
+                          setFormData({ ...formData, flights: newFlights });
+                        }}
+                        placeholder="Date"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={flight.airline}
+                        onChange={(e) => {
+                          const newFlights = [...formData.flights];
+                          newFlights[index].airline = e.target.value;
+                          setFormData({ ...formData, flights: newFlights });
+                        }}
+                        placeholder="Airline & Flight No"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={flight.route}
+                        onChange={(e) => {
+                          const newFlights = [...formData.flights];
+                          newFlights[index].route = e.target.value;
+                          setFormData({ ...formData, flights: newFlights });
+                        }}
+                        placeholder="Route"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Hotels Section */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold text-gray-700 flex items-center gap-2">
+                    <Hotel size={20} />
+                    Hotel Bookings
+                  </h3>
+                  <button
+                    onClick={addHotel}
+                    className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2 text-sm"
+                  >
+                    <Plus size={18} /> Add Hotel
+                  </button>
+                </div>
+
+                <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
+                  {formData.hotels.map((hotel, index) => (
+                    <div key={index} className="grid grid-cols-5 gap-3 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                      <input
+                        type="text"
+                        value={hotel.city}
+                        onChange={(e) => {
+                          const newHotels = [...formData.hotels];
+                          newHotels[index].city = e.target.value;
+                          setFormData({ ...formData, hotels: newHotels });
+                        }}
+                        placeholder="City"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={hotel.checkIn}
+                        onChange={(e) => {
+                          const newHotels = [...formData.hotels];
+                          newHotels[index].checkIn = e.target.value;
+                          setFormData({ ...formData, hotels: newHotels });
+                        }}
+                        placeholder="Check In"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={hotel.checkOut}
+                        onChange={(e) => {
+                          const newHotels = [...formData.hotels];
+                          newHotels[index].checkOut = e.target.value;
+                          setFormData({ ...formData, hotels: newHotels });
+                        }}
+                        placeholder="Check Out"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        value={hotel.nights}
+                        onChange={(e) => {
+                          const newHotels = [...formData.hotels];
+                          newHotels[index].nights = parseInt(e.target.value);
+                          setFormData({ ...formData, hotels: newHotels });
+                        }}
+                        placeholder="Nights"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={hotel.hotelName}
+                        onChange={(e) => {
+                          const newHotels = [...formData.hotels];
+                          newHotels[index].hotelName = e.target.value;
+                          setFormData({ ...formData, hotels: newHotels });
+                        }}
+                        placeholder="Hotel Name"
+                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none col-span-5"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep(2)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={() => setStep(4)}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
+                >
+                  Continue to Payment →
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 4: Payment & Generate */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                  <Calendar className="text-purple-600" />
+                  Payment Plan
+                </h2>
+                <p className="text-gray-600 mt-1">Configure payment installments</p>
+              </div>
+
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-6 rounded-xl border-2 border-purple-300">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Total Package Amount (₹) *</label>
+                <input
+                  type="number"
+                  value={formData.payment.total}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    payment: { ...formData.payment, total: parseInt(e.target.value) }
+                  })}
+                  className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-2xl font-bold"
+                  placeholder="900000"
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-gray-700">Payment Installments</h3>
+                {formData.payment.installments.map((inst, index) => (
+                  <div key={index} className="grid grid-cols-3 gap-4 p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
+                    <input
+                      type="text"
+                      value={inst.name}
+                      onChange={(e) => {
+                        const newInst = [...formData.payment.installments];
+                        newInst[index].name = e.target.value;
+                        setFormData({
+                          ...formData,
+                          payment: { ...formData.payment, installments: newInst }
+                        });
+                      }}
+                      placeholder="Installment Name"
+                      className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                    <input
+                      type="number"
+                      value={inst.amount}
+                      onChange={(e) => {
+                        const newInst = [...formData.payment.installments];
+                        newInst[index].amount = parseInt(e.target.value);
+                        setFormData({
+                          ...formData,
+                          payment: { ...formData.payment, installments: newInst }
+                        });
+                      }}
+                      placeholder="Amount"
+                      className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={inst.dueDate}
+                      onChange={(e) => {
+                        const newInst = [...formData.payment.installments];
+                        newInst[index].dueDate = e.target.value;
+                        setFormData({
+                          ...formData,
+                          payment: { ...formData.payment, installments: newInst }
+                        });
+                      }}
+                      placeholder="Due Date"
+                      className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-purple-50 p-6 rounded-xl border-2 border-purple-200">
+                <h3 className="font-bold text-gray-700 mb-3">Inclusions</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-600 mb-1">Flights</label>
+                    <input
+                      type="number"
+                      value={formData.inclusions.flights}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        inclusions: { ...formData.inclusions, flights: parseInt(e.target.value) }
+                      })}
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-600 mb-1">Tourist Tax</label>
+                    <input
+                      type="number"
+                      value={formData.inclusions.touristTax}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        inclusions: { ...formData.inclusions, touristTax: parseInt(e.target.value) }
+                      })}
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-600 mb-1">Hotels</label>
+                    <input
+                      type="number"
+                      value={formData.inclusions.hotels}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        inclusions: { ...formData.inclusions, hotels: parseInt(e.target.value) }
+                      })}
+                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep(3)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={generatePDF}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Download size={24} />
+                  Generate PDF Itinerary
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 mt-12">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <div className="text-3xl font-bold mb-2">
+            <span className="text-white">viago</span>
+            <span className="text-purple-400">via</span>
+          </div>
+          <p className="text-sm tracking-widest text-gray-400 mb-4">PLAN.PACK.GO</p>
+          <div className="text-sm text-gray-300 space-y-1">
+            <p>Vigovia Tech Pvt. Ltd</p>
+            <p>Hd-109 Cinnabar Hills, Links Business Park, Karnataka, India</p>
+            <p>Phone: +91-9504061112 | Email: Utkarsh@Vigovia.Com</p>
+            <p className="text-xs text-gray-500 mt-2">CIN: U79110KA2024PTC191890</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ItineraryBuilder;
