@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Download, Calendar, Users, Plane, Hotel, MapPin, AlertCircle } from 'lucide-react';
+import { Plus, Minus, Download, Calendar, Users, Plane, Hotel, MapPin, AlertCircle, X } from 'lucide-react';
 
 const ItineraryBuilder = () => {
   const [step, setStep] = useState(1);
@@ -10,7 +10,7 @@ const ItineraryBuilder = () => {
     departureFrom: '',
     departureDate: '',
     arrivalDate: '',
-    totalTravelers: 4,
+    totalTravelers: '',
     days: [
       {
         date: '27th November',
@@ -128,11 +128,76 @@ const ItineraryBuilder = () => {
     });
   };
 
+  const removeFlight = (index) => {
+    if (formData.flights.length > 1) {
+      const newFlights = formData.flights.filter((_, i) => i !== index);
+      setFormData({ ...formData, flights: newFlights });
+    }
+  };
+
   const addHotel = () => {
     setFormData({
       ...formData,
       hotels: [...formData.hotels, { city: '', checkIn: '', checkOut: '', nights: 0, hotelName: '' }]
     });
+  };
+
+  const removeHotel = (index) => {
+    if (formData.hotels.length > 1) {
+      const newHotels = formData.hotels.filter((_, i) => i !== index);
+      setFormData({ ...formData, hotels: newHotels });
+    }
+  };
+
+  const validateStep1 = () => {
+    if (!formData.clientName.trim()) {
+      alert('Please enter client name');
+      return false;
+    }
+    if (!formData.destination.trim()) {
+      alert('Please enter destination');
+      return false;
+    }
+    if (!formData.departureFrom.trim()) {
+      alert('Please enter departure location');
+      return false;
+    }
+    if (!formData.departureDate) {
+      alert('Please select departure date');
+      return false;
+    }
+    if (!formData.arrivalDate) {
+      alert('Please select arrival date');
+      return false;
+    }
+    if (new Date(formData.arrivalDate) < new Date(formData.departureDate)) {
+      alert('Arrival date cannot be before departure date');
+      return false;
+    }
+    if (formData.totalTravelers < 1) {
+      alert('Number of travelers must be at least 1');
+      return false;
+    }
+    return true;
+  };
+
+  const validateStep2 = () => {
+    for (let i = 0; i < formData.days.length; i++) {
+      const day = formData.days[i];
+      if (!day.date) {
+        alert(`Please enter date for Day ${i + 1}`);
+        return false;
+      }
+      if (!day.title.trim()) {
+        alert(`Please enter title for Day ${i + 1}`);
+        return false;
+      }
+      if (!day.morning.trim() && !day.afternoon.trim() && !day.evening.trim()) {
+        alert(`Please add at least one activity for Day ${i + 1}`);
+        return false;
+      }
+    }
+    return true;
   };
 
   const generatePDF = () => {
@@ -635,19 +700,15 @@ const ItineraryBuilder = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-6 shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 shadow-lg">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight">
-                <span className="text-white">viago</span>
-                <span className="text-purple-200">via</span>
-              </h1>
-              <p className="text-sm tracking-widest mt-1 text-purple-100">PLAN.PACK.GO</p>
-            </div>
-            <div className="text-right">
-              <p className="text-lg font-semibold">Professional Itinerary Builder</p>
-              <p className="text-sm text-purple-100">Create stunning travel plans in minutes</p>
+            <div className="flex items-center gap-4">
+              <img src="/image.png" alt="Vigovia Logo" className="h-12 w-auto" />
+              <div>
+                <p className="text-lg font-semibold">Professional Itinerary Builder</p>
+                <p className="text-xs text-purple-100">Create stunning travel plans in minutes</p>
+              </div>
             </div>
           </div>
         </div>
@@ -677,11 +738,11 @@ const ItineraryBuilder = () => {
         </div>
 
         {/* Form Content */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-5xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-5xl mx-auto min-h-[600px] max-h-[650px] overflow-hidden flex flex-col">
           {/* Step 1: Basic Information */}
           {step === 1 && (
-            <div className="space-y-6">
-              <div className="border-b pb-4">
+            <div className="space-y-4 flex-1 flex flex-col">
+              <div className="border-b pb-3">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <Users className="text-purple-600" />
                   Basic Trip Information
@@ -689,7 +750,7 @@ const ItineraryBuilder = () => {
                 <p className="text-gray-600 mt-1">Let's start with the essentials</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-2 gap-4 flex-1">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Client Name *</label>
                   <input
@@ -768,7 +829,7 @@ const ItineraryBuilder = () => {
 
               <button
                 onClick={() => {
-                  if (validateDates()) {
+                  if (validateStep1()) {
                     setStep(2);
                   }
                 }}
@@ -781,94 +842,142 @@ const ItineraryBuilder = () => {
 
           {/* Step 2: Daily Itinerary */}
           {step === 2 && (
-            <div className="space-y-6">
-              <div className="border-b pb-4 flex justify-between items-center">
+            <div className="flex flex-col h-full overflow-hidden">
+              <div className="border-b pb-4 flex justify-between items-start flex-shrink-0">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <MapPin className="text-purple-600" />
+                  <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                    <MapPin className="text-purple-600" size={32} />
                     Daily Itinerary
                   </h2>
-                  <p className="text-gray-600 mt-1">Plan activities for each day</p>
+                  <p className="text-gray-500 mt-2">Plan your day-by-day activities and experiences</p>
                 </div>
                 <button
                   onClick={addDay}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2"
+                  className="bg-green-500 text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
                 >
                   <Plus size={20} /> Add Day
                 </button>
               </div>
 
-              <div className="space-y-6 max-h-96 overflow-y-auto pr-2">
-                {formData.days.map((day, index) => (
-                  <div key={index} className="border-2 border-gray-200 rounded-xl p-6 bg-gray-50">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold text-purple-700">Day {index + 1}</h3>
-                      {formData.days.length > 1 && (
-                        <button
-                          onClick={() => removeDay(index)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Minus size={20} />
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          value={day.date}
-                          onChange={(e) => updateDay(index, 'date', e.target.value)}
-                          placeholder="Date (e.g., 27th November)"
-                          className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                        />
-                        <input
-                          type="text"
-                          value={day.title}
-                          onChange={(e) => updateDay(index, 'title', e.target.value)}
-                          placeholder="Day Title"
-                          className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                        />
+              <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 mt-4 mb-4 scrollbar-thin scrollbar-thumb-purple-400 scrollbar-track-gray-100">
+                <div className="space-y-5">
+                  {formData.days.map((day, index) => (
+                    <div key={index} className="bg-white border-2 border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all">
+                      {/* Day Header */}
+                      <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gradient-to-br from-purple-600 to-blue-600 text-white rounded-xl w-12 h-12 flex items-center justify-center font-bold text-lg shadow-md">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800">Day {index + 1}</h3>
+                            <p className="text-sm text-gray-500">Enter details for this day</p>
+                          </div>
+                        </div>
+                        {formData.days.length > 1 && (
+                          <button
+                            onClick={() => removeDay(index)}
+                            className="bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2 rounded-lg flex items-center gap-2 font-medium transition-colors"
+                          >
+                            <X size={18} /> Remove Day
+                          </button>
+                        )}
                       </div>
 
-                      <textarea
-                        value={day.morning}
-                        onChange={(e) => updateDay(index, 'morning', e.target.value)}
-                        placeholder="Morning activities..."
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                        rows="2"
-                      />
+                      {/* Date and Title Row */}
+                      <div className="grid grid-cols-2 gap-5 mb-5">
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                            <Calendar size={16} className="text-purple-600" />
+                            Date *
+                          </label>
+                          <input
+                            type="date"
+                            value={day.date}
+                            onChange={(e) => updateDay(index, 'date', e.target.value)}
+                            className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 focus:outline-none transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                            Day Title *
+                          </label>
+                          <input
+                            type="text"
+                            value={day.title}
+                            onChange={(e) => updateDay(index, 'title', e.target.value)}
+                            placeholder="e.g., Arrival in Singapore & City Exploration"
+                            className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 focus:outline-none transition-all"
+                          />
+                        </div>
+                      </div>
 
-                      <textarea
-                        value={day.afternoon}
-                        onChange={(e) => updateDay(index, 'afternoon', e.target.value)}
-                        placeholder="Afternoon activities..."
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                        rows="2"
-                      />
+                      {/* Activities Section */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide">Activities</h4>
+                        
+                        {/* Morning */}
+                        <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-200">
+                          <label className="block text-sm font-bold text-orange-700 mb-2 flex items-center gap-2">
+                            <span className="text-lg">🌅</span> Morning Activities
+                          </label>
+                          <textarea
+                            value={day.morning}
+                            onChange={(e) => updateDay(index, 'morning', e.target.value)}
+                            placeholder="Describe morning activities (e.g., Hotel check-in, breakfast, sightseeing)..."
+                            className="w-full px-4 py-3 text-sm border-2 border-orange-300 bg-white rounded-lg focus:border-orange-500 focus:ring-4 focus:ring-orange-100 focus:outline-none resize-none transition-all"
+                            rows="3"
+                          />
+                        </div>
 
-                      <textarea
-                        value={day.evening}
-                        onChange={(e) => updateDay(index, 'evening', e.target.value)}
-                        placeholder="Evening activities..."
-                        className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                        rows="2"
-                      />
+                        {/* Afternoon */}
+                        <div className="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200">
+                          <label className="block text-sm font-bold text-yellow-700 mb-2 flex items-center gap-2">
+                            <span className="text-lg">☀️</span> Afternoon Activities
+                          </label>
+                          <textarea
+                            value={day.afternoon}
+                            onChange={(e) => updateDay(index, 'afternoon', e.target.value)}
+                            placeholder="Describe afternoon activities (e.g., Lunch, attractions, shopping)..."
+                            className="w-full px-4 py-3 text-sm border-2 border-yellow-300 bg-white rounded-lg focus:border-yellow-500 focus:ring-4 focus:ring-yellow-100 focus:outline-none resize-none transition-all"
+                            rows="3"
+                          />
+                        </div>
+
+                        {/* Evening */}
+                        <div className="bg-indigo-50 rounded-xl p-4 border-2 border-indigo-200">
+                          <label className="block text-sm font-bold text-indigo-700 mb-2 flex items-center gap-2">
+                            <span className="text-lg">🌙</span> Evening Activities
+                          </label>
+                          <textarea
+                            value={day.evening}
+                            onChange={(e) => updateDay(index, 'evening', e.target.value)}
+                            placeholder="Describe evening activities (e.g., Dinner, entertainment, relaxation)..."
+                            className="w-full px-4 py-3 text-sm border-2 border-indigo-300 bg-white rounded-lg focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none resize-none transition-all"
+                            rows="3"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
-              <div className="flex gap-4">
+              {/* Navigation Buttons */}
+              <div className="flex gap-4 pt-4 border-t-2 border-gray-200 flex-shrink-0">
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                  className="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-xl font-semibold hover:bg-gray-300 transition-all shadow-md text-lg"
                 >
                   ← Back
                 </button>
                 <button
-                  onClick={() => setStep(3)}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
+                  onClick={() => {
+                    if (validateStep2()) {
+                      setStep(3);
+                    }
+                  }}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3.5 rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg text-lg"
                 >
                   Continue to Flights & Hotels →
                 </button>
@@ -878,8 +987,8 @@ const ItineraryBuilder = () => {
 
           {/* Step 3: Flights & Hotels */}
           {step === 3 && (
-            <div className="space-y-6">
-              <div className="border-b pb-4">
+            <div className="space-y-4">
+              <div className="border-b pb-3">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <Plane className="text-purple-600" />
                   Flights & Hotels
@@ -889,51 +998,64 @@ const ItineraryBuilder = () => {
 
               {/* Flights Section */}
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-gray-700">Flight Details</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-base font-bold text-gray-700">Flight Details</h3>
                   <button
                     onClick={addFlight}
-                    className="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 flex items-center gap-2 text-sm"
+                    className="bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-blue-600 flex items-center gap-2 text-sm"
                   >
-                    <Plus size={18} /> Add Flight
+                    <Plus size={16} /> Add Flight
                   </button>
                 </div>
 
-                <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
+                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
                   {formData.flights.map((flight, index) => (
-                    <div key={index} className="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                      <input
-                        type="date"
-                        value={flight.date}
-                        onChange={(e) => {
-                          const newFlights = [...formData.flights];
-                          newFlights[index].date = e.target.value;
-                          setFormData({ ...formData, flights: newFlights });
-                        }}
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        value={flight.airline}
-                        onChange={(e) => {
-                          const newFlights = [...formData.flights];
-                          newFlights[index].airline = e.target.value;
-                          setFormData({ ...formData, flights: newFlights });
-                        }}
-                        placeholder="Airline & Flight No"
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
-                      <input
-                        type="text"
-                        value={flight.route}
-                        onChange={(e) => {
-                          const newFlights = [...formData.flights];
-                          newFlights[index].route = e.target.value;
-                          setFormData({ ...formData, flights: newFlights });
-                        }}
-                        placeholder="Route"
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
+                    <div key={index} className="p-3 bg-blue-50 rounded-lg border-2 border-blue-200">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold text-blue-700">Flight {index + 1}</span>
+                        {formData.flights.length > 1 && (
+                          <button
+                            onClick={() => removeFlight(index)}
+                            className="text-red-500 hover:text-red-700 flex items-center gap-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <input
+                          type="date"
+                          value={flight.date}
+                          onChange={(e) => {
+                            const newFlights = [...formData.flights];
+                            newFlights[index].date = e.target.value;
+                            setFormData({ ...formData, flights: newFlights });
+                          }}
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={flight.airline}
+                          onChange={(e) => {
+                            const newFlights = [...formData.flights];
+                            newFlights[index].airline = e.target.value;
+                            setFormData({ ...formData, flights: newFlights });
+                          }}
+                          placeholder="Airline & Flight No"
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={flight.route}
+                          onChange={(e) => {
+                            const newFlights = [...formData.flights];
+                            newFlights[index].route = e.target.value;
+                            setFormData({ ...formData, flights: newFlights });
+                          }}
+                          placeholder="Route"
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -941,65 +1063,104 @@ const ItineraryBuilder = () => {
 
               {/* Hotels Section */}
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-gray-700 flex items-center gap-2">
-                    <Hotel size={20} />
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-base font-bold text-gray-700 flex items-center gap-2">
+                    <Hotel size={18} />
                     Hotel Bookings
                   </h3>
                   <button
                     onClick={addHotel}
-                    className="bg-green-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2 text-sm"
+                    className="bg-green-500 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-green-600 flex items-center gap-2 text-sm"
                   >
-                    <Plus size={18} /> Add Hotel
+                    <Plus size={16} /> Add Hotel
                   </button>
                 </div>
 
-                <div className="space-y-4 max-h-48 overflow-y-auto pr-2">
+                <div className="space-y-3 max-h-[200px] overflow-y-auto pr-2">
                   {formData.hotels.map((hotel, index) => (
-                    <div key={index} className="grid grid-cols-5 gap-3 p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                      <input
-                        type="text"
-                        value={hotel.city}
-                        onChange={(e) => {
-                          const newHotels = [...formData.hotels];
-                          newHotels[index].city = e.target.value;
-                          setFormData({ ...formData, hotels: newHotels });
-                        }}
-                        placeholder="City"
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
-                      <input
-                        type="date"
-                        value={hotel.checkIn}
-                        onChange={(e) => {
-                          const newHotels = [...formData.hotels];
-                          newHotels[index].checkIn = e.target.value;
-                          setFormData({ ...formData, hotels: newHotels });
-                        }}
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
-                      <input
-                        type="date"
-                        value={hotel.checkOut}
-                        onChange={(e) => {
-                          const newHotels = [...formData.hotels];
-                          newHotels[index].checkOut = e.target.value;
-                          setFormData({ ...formData, hotels: newHotels });
-                        }}
-                        min={hotel.checkIn}
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
-                      <input
-                        type="number"
-                        value={hotel.nights}
-                        onChange={(e) => {
-                          const newHotels = [...formData.hotels];
-                          newHotels[index].nights = parseInt(e.target.value);
-                          setFormData({ ...formData, hotels: newHotels });
-                        }}
-                        placeholder="Nights"
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                      />
+                    <div key={index} className="p-3 bg-green-50 rounded-lg border-2 border-green-200">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold text-green-700">Hotel {index + 1}</span>
+                        {formData.hotels.length > 1 && (
+                          <button
+                            onClick={() => removeHotel(index)}
+                            className="text-red-500 hover:text-red-700 flex items-center gap-1"
+                          >
+                            <X size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-4 gap-2 mb-2">
+                        <input
+                          type="text"
+                          value={hotel.city}
+                          onChange={(e) => {
+                            const newHotels = [...formData.hotels];
+                            newHotels[index].city = e.target.value;
+                            setFormData({ ...formData, hotels: newHotels });
+                          }}
+                          placeholder="City"
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="date"
+                          value={hotel.checkIn}
+                          onChange={(e) => {
+                            const newHotels = [...formData.hotels];
+                            newHotels[index].checkIn = e.target.value;
+                            
+                            // Auto-calculate nights if checkout exists
+                            if (newHotels[index].checkOut && e.target.value) {
+                              const checkIn = new Date(e.target.value);
+                              const checkOut = new Date(newHotels[index].checkOut);
+                              if (checkOut < checkIn) {
+                                alert('Check-out date cannot be before check-in date');
+                                return;
+                              }
+                              const diffTime = Math.abs(checkOut - checkIn);
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              newHotels[index].nights = diffDays;
+                            }
+                            
+                            setFormData({ ...formData, hotels: newHotels });
+                          }}
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="date"
+                          value={hotel.checkOut}
+                          onChange={(e) => {
+                            const newHotels = [...formData.hotels];
+                            
+                            if (newHotels[index].checkIn && e.target.value) {
+                              const checkIn = new Date(newHotels[index].checkIn);
+                              const checkOut = new Date(e.target.value);
+                              if (checkOut < checkIn) {
+                                alert('Check-out date cannot be before check-in date');
+                                return;
+                              }
+                              const diffTime = Math.abs(checkOut - checkIn);
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              newHotels[index].nights = diffDays;
+                            }
+                            
+                            newHotels[index].checkOut = e.target.value;
+                            setFormData({ ...formData, hotels: newHotels });
+                          }}
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                        <input
+                          type="number"
+                          value={hotel.nights}
+                          onChange={(e) => {
+                            const newHotels = [...formData.hotels];
+                            newHotels[index].nights = parseInt(e.target.value) || 0;
+                            setFormData({ ...formData, hotels: newHotels });
+                          }}
+                          placeholder="Nights"
+                          className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
                       <input
                         type="text"
                         value={hotel.hotelName}
@@ -1009,23 +1170,23 @@ const ItineraryBuilder = () => {
                           setFormData({ ...formData, hotels: newHotels });
                         }}
                         placeholder="Hotel Name"
-                        className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none col-span-5"
+                        className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                       />
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 mt-4">
                 <button
                   onClick={() => setStep(2)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-all"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={() => setStep(4)}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
                 >
                   Continue to Payment →
                 </button>
@@ -1035,8 +1196,8 @@ const ItineraryBuilder = () => {
 
           {/* Step 4: Payment & Generate */}
           {step === 4 && (
-            <div className="space-y-6">
-              <div className="border-b pb-4">
+            <div className="space-y-4">
+              <div className="border-b pb-3">
                 <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                   <Calendar className="text-purple-600" />
                   Payment Plan
@@ -1044,7 +1205,7 @@ const ItineraryBuilder = () => {
                 <p className="text-gray-600 mt-1">Configure payment installments</p>
               </div>
 
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-6 rounded-xl border-2 border-purple-300">
+              <div className="bg-gradient-to-r from-purple-100 to-blue-100 p-4 rounded-xl border-2 border-purple-300">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Total Package Amount (₹) *</label>
                 <input
                   type="number"
@@ -1053,66 +1214,68 @@ const ItineraryBuilder = () => {
                     ...formData,
                     payment: { ...formData.payment, total: parseInt(e.target.value) }
                   })}
-                  className="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-2xl font-bold"
+                  className="w-full px-4 py-2 border-2 border-purple-300 rounded-lg focus:border-purple-500 focus:outline-none text-xl font-bold"
                   placeholder="900000"
                 />
               </div>
 
-              <div className="space-y-4">
-                <h3 className="font-bold text-gray-700">Payment Installments</h3>
-                {formData.payment.installments.map((inst, index) => (
-                  <div key={index} className="grid grid-cols-3 gap-4 p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200">
-                    <input
-                      type="text"
-                      value={inst.name}
-                      onChange={(e) => {
-                        const newInst = [...formData.payment.installments];
-                        newInst[index].name = e.target.value;
-                        setFormData({
-                          ...formData,
-                          payment: { ...formData.payment, installments: newInst }
-                        });
-                      }}
-                      placeholder="Installment Name"
-                      className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="number"
-                      value={inst.amount}
-                      onChange={(e) => {
-                        const newInst = [...formData.payment.installments];
-                        newInst[index].amount = parseInt(e.target.value);
-                        setFormData({
-                          ...formData,
-                          payment: { ...formData.payment, installments: newInst }
-                        });
-                      }}
-                      placeholder="Amount"
-                      className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                    />
-                    <input
-                      type="text"
-                      value={inst.dueDate}
-                      onChange={(e) => {
-                        const newInst = [...formData.payment.installments];
-                        newInst[index].dueDate = e.target.value;
-                        setFormData({
-                          ...formData,
-                          payment: { ...formData.payment, installments: newInst }
-                        });
-                      }}
-                      placeholder="Due Date"
-                      className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                    />
-                  </div>
-                ))}
+              <div className="space-y-3">
+                <h3 className="text-base font-bold text-gray-700">Payment Installments</h3>
+                <div className="max-h-[140px] overflow-y-auto pr-2 space-y-2">
+                  {formData.payment.installments.map((inst, index) => (
+                    <div key={index} className="grid grid-cols-3 gap-3 p-3 bg-yellow-50 rounded-lg border-2 border-yellow-200">
+                      <input
+                        type="text"
+                        value={inst.name}
+                        onChange={(e) => {
+                          const newInst = [...formData.payment.installments];
+                          newInst[index].name = e.target.value;
+                          setFormData({
+                            ...formData,
+                            payment: { ...formData.payment, installments: newInst }
+                          });
+                        }}
+                        placeholder="Installment Name"
+                        className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="number"
+                        value={inst.amount}
+                        onChange={(e) => {
+                          const newInst = [...formData.payment.installments];
+                          newInst[index].amount = parseInt(e.target.value);
+                          setFormData({
+                            ...formData,
+                            payment: { ...formData.payment, installments: newInst }
+                          });
+                        }}
+                        placeholder="Amount"
+                        className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                      <input
+                        type="text"
+                        value={inst.dueDate}
+                        onChange={(e) => {
+                          const newInst = [...formData.payment.installments];
+                          newInst[index].dueDate = e.target.value;
+                          setFormData({
+                            ...formData,
+                            payment: { ...formData.payment, installments: newInst }
+                          });
+                        }}
+                        placeholder="Due Date"
+                        className="px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="bg-purple-50 p-6 rounded-xl border-2 border-purple-200">
-                <h3 className="font-bold text-gray-700 mb-3">Inclusions</h3>
-                <div className="grid grid-cols-3 gap-4">
+              <div className="bg-purple-50 p-4 rounded-xl border-2 border-purple-200">
+                <h3 className="text-base font-bold text-gray-700 mb-3">Inclusions</h3>
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-600 mb-1">Flights</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Flights</label>
                     <input
                       type="number"
                       value={formData.inclusions.flights}
@@ -1120,11 +1283,11 @@ const ItineraryBuilder = () => {
                         ...formData,
                         inclusions: { ...formData.inclusions, flights: parseInt(e.target.value) }
                       })}
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-600 mb-1">Tourist Tax</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Tourist Tax</label>
                     <input
                       type="number"
                       value={formData.inclusions.touristTax}
@@ -1132,11 +1295,11 @@ const ItineraryBuilder = () => {
                         ...formData,
                         inclusions: { ...formData.inclusions, touristTax: parseInt(e.target.value) }
                       })}
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-600 mb-1">Hotels</label>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Hotels</label>
                     <input
                       type="number"
                       value={formData.inclusions.hotels}
@@ -1144,24 +1307,24 @@ const ItineraryBuilder = () => {
                         ...formData,
                         inclusions: { ...formData.inclusions, hotels: parseInt(e.target.value) }
                       })}
-                      className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
+                      className="w-full px-2 py-1.5 text-sm border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 mt-4">
                 <button
                   onClick={() => setStep(3)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-lg font-semibold hover:bg-gray-400 transition-all"
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-400 transition-all"
                 >
                   ← Back
                 </button>
                 <button
                   onClick={generatePDF}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg flex items-center justify-center gap-2"
                 >
-                  <Download size={24} />
+                  <Download size={20} />
                   Generate PDF Itinerary
                 </button>
               </div>
@@ -1173,11 +1336,7 @@ const ItineraryBuilder = () => {
       {/* Footer */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="text-3xl font-bold mb-2">
-            <span className="text-white">viago</span>
-            <span className="text-purple-400">via</span>
-          </div>
-          <p className="text-sm tracking-widest text-gray-400 mb-4">PLAN.PACK.GO</p>
+          <img src="/image.png" alt="Vigovia Logo" className="h-16 w-auto mx-auto mb-4" />
           <div className="text-sm text-gray-300 space-y-1">
             <p>Vigovia Tech Pvt. Ltd</p>
             <p>Hd-109 Cinnabar Hills, Links Business Park, Karnataka, India</p>
