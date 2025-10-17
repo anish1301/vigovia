@@ -213,327 +213,424 @@ const ItineraryBuilder = () => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Singapore Itinerary - ${formData.clientName}</title>
+  <title>${formData.destination} Itinerary - ${formData.clientName}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-      color: #1a1a1a;
-      background: white;
-      line-height: 1.5;
+      font-family: 'Arial', 'Helvetica', sans-serif;
+      color: #333;
+      background: #FAFAFA;
+      line-height: 1.6;
     }
     .page { 
       width: 210mm;
       margin: 0 auto;
       background: white;
-      padding: 15mm;
+      padding: 18mm;
       page-break-after: always;
     }
-    .header {
-      background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
-      color: white;
-      padding: 40px 30px;
-      border-radius: 12px;
-      margin-bottom: 30px;
+    
+    /* Logo Section */
+    .logo-section {
       text-align: center;
-    }
-    .logo { 
-      font-size: 36px;
-      font-weight: 700;
-      margin-bottom: 5px;
-      letter-spacing: -1px;
-    }
-    .logo .viago { color: #fff; }
-    .logo .via { color: #A78BFA; }
-    .tagline { 
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      opacity: 0.9;
       margin-bottom: 25px;
     }
-    .header h1 { 
-      font-size: 32px;
-      margin-bottom: 8px;
+    .logo-text {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -2px;
+    }
+    .logo-viago { color: #2D3561; }
+    .logo-via { color: #9370DB; }
+    .tagline {
+      font-size: 9px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: #888;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+    
+    /* Header Card */
+    .header-card {
+      background: linear-gradient(135deg, #7B68EE 0%, #9370DB 50%, #BA55D3 100%);
+      color: white;
+      padding: 35px 40px;
+      border-radius: 18px;
+      text-align: center;
+      margin-bottom: 25px;
+      box-shadow: 0 6px 25px rgba(123, 104, 238, 0.3);
+    }
+    .greeting {
+      font-size: 34px;
       font-weight: 600;
+      margin-bottom: 8px;
     }
-    .header .subtitle { 
-      font-size: 18px;
-      font-weight: 300;
-      margin-bottom: 15px;
+    .destination-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
     }
-    .icons {
+    .trip-duration {
+      font-size: 16px;
+      font-weight: 400;
+      opacity: 0.95;
+      margin-bottom: 18px;
+    }
+    .header-icons {
       display: flex;
       justify-content: center;
-      gap: 20px;
-      margin-top: 15px;
-      font-size: 20px;
+      gap: 30px;
+      font-size: 24px;
+      margin-top: 18px;
     }
+    
+    /* Trip Info Grid */
     .trip-info {
-      background: #F8F9FA;
-      padding: 20px 25px;
-      border-radius: 10px;
-      margin-bottom: 30px;
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 28px;
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 15px;
-      border: 1px solid #E5E7EB;
+      gap: 12px;
+      border: 1.5px solid #DDD;
     }
     .info-item {
       text-align: center;
+      padding: 8px;
+      border-right: 1px solid #EEE;
+    }
+    .info-item:last-child {
+      border-right: none;
     }
     .info-label {
-      font-size: 11px;
-      color: #6B7280;
+      font-size: 10px;
+      color: #888;
       font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      letter-spacing: 0.3px;
+      margin-bottom: 5px;
     }
     .info-value {
       font-size: 13px;
-      color: #1F2937;
-      font-weight: 600;
+      color: #2D3561;
+      font-weight: 700;
     }
+    
+    /* Day Container */
     .day-container {
       display: flex;
-      gap: 20px;
-      margin-bottom: 25px;
+      gap: 18px;
+      margin-bottom: 28px;
       page-break-inside: avoid;
+      background: white;
+      border: 1.5px solid #E5E7EB;
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
+    
+    .day-left {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+    
     .day-label {
-      background: #2D1B69;
+      background: linear-gradient(180deg, #4527A0 0%, #5E35B1 50%, #7E57C2 100%);
       color: white;
       writing-mode: vertical-rl;
       text-orientation: mixed;
-      padding: 15px 10px;
-      border-radius: 8px;
+      padding: 28px 12px;
+      border-radius: 10px;
       font-weight: 700;
-      font-size: 14px;
-      min-width: 50px;
+      font-size: 16px;
+      min-width: 45px;
       text-align: center;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      box-shadow: 0 3px 12px rgba(69, 39, 160, 0.35);
+      align-self: stretch;
     }
+    
+    .day-image {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 4px solid #E8E4F3;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    }
+    
     .day-content {
       flex: 1;
-      background: white;
-      border: 1px solid #E5E7EB;
-      border-radius: 10px;
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
+    
     .day-header {
-      background: #F9FAFB;
-      padding: 15px 20px;
-      border-bottom: 2px solid #E5E7EB;
+      margin-bottom: 18px;
+      border-bottom: 1.5px solid #F0F0F0;
+      padding-bottom: 12px;
     }
+    
     .day-date {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 700;
-      color: #2D1B69;
-      margin-bottom: 3px;
+      color: #4527A0;
+      margin-bottom: 4px;
     }
+    
     .day-title {
-      font-size: 12px;
-      color: #6B7280;
-      font-weight: 500;
+      font-size: 13px;
+      color: #7E57C2;
+      font-weight: 600;
+      line-height: 1.5;
     }
+    
     .timeline {
-      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
+    
     .timeline-item {
       display: flex;
-      gap: 15px;
-      margin-bottom: 15px;
+      gap: 12px;
       position: relative;
+      align-items: flex-start;
     }
-    .timeline-item:not(:last-child)::before {
+    
+    .timeline-item:not(:last-child)::after {
       content: '';
       position: absolute;
       left: 8px;
-      top: 25px;
-      bottom: -15px;
-      width: 2px;
-      background: #E5E7EB;
+      top: 22px;
+      bottom: -16px;
+      width: 1.5px;
+      background: linear-gradient(180deg, #AB47BC 0%, #E0E0E0 100%);
     }
+    
     .timeline-dot {
       width: 18px;
       height: 18px;
       border-radius: 50%;
       background: white;
-      border: 3px solid #7B68EE;
+      border: 3px solid #AB47BC;
       flex-shrink: 0;
       margin-top: 2px;
       z-index: 1;
+      position: relative;
     }
+    
     .timeline-content {
       flex: 1;
     }
+    
     .timeline-time {
       font-size: 13px;
       font-weight: 700;
-      color: #2D1B69;
+      color: #4527A0;
       margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
+    
     .timeline-text {
       font-size: 12px;
-      color: #4B5563;
-      line-height: 1.6;
+      color: #555;
+      line-height: 1.8;
       white-space: pre-line;
     }
+    
+    .timeline-text ul {
+      margin-left: 15px;
+      margin-top: 4px;
+    }
+    
+    .timeline-text li {
+      margin-bottom: 4px;
+    }
+    
     .section-title {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 700;
-      color: #1F2937;
-      margin: 35px 0 20px;
+      color: #4527A0;
+      margin: 32px 0 18px;
       padding-bottom: 8px;
-      border-bottom: 2px solid #7B68EE;
+      border-bottom: 2.5px solid #9370DB;
     }
     .table-container {
       background: white;
-      border: 1px solid #E5E7EB;
-      border-radius: 10px;
+      border: 1.5px solid #DDD;
+      border-radius: 12px;
       overflow: hidden;
-      margin-bottom: 25px;
+      margin-bottom: 22px;
     }
     table {
       width: 100%;
       border-collapse: collapse;
     }
     th {
-      background: #2D1B69;
+      background: linear-gradient(135deg, #4527A0 0%, #5E35B1 50%, #7E57C2 100%);
       color: white;
-      padding: 12px 15px;
+      padding: 12px 16px;
       text-align: left;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
     td {
-      padding: 12px 15px;
+      padding: 12px 16px;
       font-size: 12px;
-      color: #4B5563;
-      border-bottom: 1px solid #F3F4F6;
+      color: #555;
+      border-bottom: 1px solid #F0F0F0;
     }
     tr:last-child td {
       border-bottom: none;
     }
     tr:nth-child(even) {
-      background: #F9FAFB;
+      background: #FAFAFA;
     }
     .payment-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
+      gap: 18px;
+      margin-bottom: 28px;
     }
     .payment-card {
       background: white;
-      border: 2px solid #E5E7EB;
-      border-radius: 10px;
-      padding: 18px;
+      border: 1.5px solid #DDD;
+      border-radius: 12px;
+      padding: 22px;
       text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
     .payment-title {
       font-size: 11px;
-      color: #6B7280;
-      font-weight: 600;
+      color: #888;
+      font-weight: 700;
       text-transform: uppercase;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      letter-spacing: 0.8px;
     }
     .payment-amount {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
-      color: #2D1B69;
+      color: #4527A0;
       margin-bottom: 6px;
     }
     .payment-due {
       font-size: 11px;
-      color: #6B7280;
+      color: #888;
+      font-weight: 500;
     }
     .total-section {
-      background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+      background: linear-gradient(135deg, #7B68EE 0%, #9370DB 50%, #BA55D3 100%);
       color: white;
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 25px;
+      padding: 28px;
+      border-radius: 12px;
+      margin-bottom: 28px;
       text-align: center;
+      box-shadow: 0 4px 18px rgba(123, 104, 238, 0.25);
     }
     .total-label {
       font-size: 13px;
-      opacity: 0.9;
-      margin-bottom: 5px;
+      opacity: 0.95;
+      margin-bottom: 6px;
+      font-weight: 600;
     }
     .total-amount {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 700;
     }
     .footer {
-      background: #F9FAFB;
-      padding: 20px;
-      border-radius: 10px;
-      border: 1px solid #E5E7EB;
-      margin-top: 30px;
+      background: #FAFAFA;
+      padding: 22px;
+      border-radius: 12px;
+      border: 1.5px solid #DDD;
+      margin-top: 35px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
     .company-info {
       font-size: 10px;
-      color: #6B7280;
-      line-height: 1.6;
+      color: #777;
+      line-height: 1.7;
     }
     .company-name {
       font-weight: 700;
-      color: #2D1B69;
-      margin-bottom: 3px;
+      color: #4527A0;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .footer-logo {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -2px;
     }
     @media print {
       .page { margin: 0; padding: 15mm; }
       body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .day-image { print-color-adjust: exact; }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <div class="header">
-      <div class="logo"><span class="viago">viago</span><span class="via">via</span></div>
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <div class="logo-text">
+        <span class="logo-viago">viago</span><span class="logo-via">via</span>
+      </div>
       <div class="tagline">PLAN.PACK.GO</div>
-      <h1>Hi, ${formData.clientName}!</h1>
-      <div class="subtitle">${formData.destination} Itinerary</div>
-      <div class="subtitle">${formData.days.length} Days ${formData.days.length - 1} Nights</div>
-      <div class="icons">✈️ 🏨 🎫 🚗 🎭</div>
     </div>
 
+    <!-- Header Card -->
+    <div class="header-card">
+      <div class="greeting">Hi, ${formData.clientName}!</div>
+      <div class="destination-title">${formData.destination} Itinerary</div>
+      <div class="trip-duration">${formData.days.length} Days ${formData.days.length - 1} Nights</div>
+      <div class="header-icons">✈️ 🏨 🎫 🚗 🎭</div>
+    </div>
+
+    <!-- Trip Info -->
     <div class="trip-info">
       <div class="info-item">
-        <div class="info-label">Departure From</div>
+        <div class="info-label">Departure From :</div>
         <div class="info-value">${formData.departureFrom}</div>
       </div>
       <div class="info-item">
-        <div class="info-label">Departure</div>
+        <div class="info-label">Departure :</div>
         <div class="info-value">${formatDate(formData.departureDate)}</div>
       </div>
       <div class="info-item">
-        <div class="info-label">Arrival</div>
+        <div class="info-label">Arrival :</div>
         <div class="info-value">${formatDate(formData.arrivalDate)}</div>
       </div>
       <div class="info-item">
-        <div class="info-label">Destination</div>
+        <div class="info-label">Destination :</div>
         <div class="info-value">${formData.destination}</div>
       </div>
       <div class="info-item">
-        <div class="info-label">No. Of Travellers</div>
+        <div class="info-label">No. Of Travellers :</div>
         <div class="info-value">${formData.totalTravelers}</div>
       </div>
     </div>
 
+    <!-- Daily Itinerary -->
     ${formData.days.map((day, index) => `
       <div class="day-container">
-        <div class="day-label">Day ${index + 1}</div>
+        <div class="day-left">
+          <div class="day-label">Day ${index + 1}</div>
+          <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400&h=400&fit=crop" alt="Day ${index + 1}" class="day-image" />
+        </div>
         <div class="day-content">
           <div class="day-header">
-            <div class="day-date">${day.date}</div>
+            <div class="day-date">${formatDateLong(day.date)}</div>
             <div class="day-title">${day.title}</div>
           </div>
           <div class="timeline">
@@ -542,7 +639,7 @@ const ItineraryBuilder = () => {
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                   <div class="timeline-time">Morning</div>
-                  <div class="timeline-text">${day.morning}</div>
+                  <div class="timeline-text">• ${day.morning.replace(/\n/g, '\n• ')}</div>
                 </div>
               </div>
             ` : ''}
@@ -551,7 +648,7 @@ const ItineraryBuilder = () => {
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                   <div class="timeline-time">Afternoon</div>
-                  <div class="timeline-text">${day.afternoon}</div>
+                  <div class="timeline-text">• ${day.afternoon.replace(/\n/g, '\n• ')}</div>
                 </div>
               </div>
             ` : ''}
@@ -560,7 +657,7 @@ const ItineraryBuilder = () => {
                 <div class="timeline-dot"></div>
                 <div class="timeline-content">
                   <div class="timeline-time">Evening</div>
-                  <div class="timeline-text">${day.evening}</div>
+                  <div class="timeline-text">• ${day.evening.replace(/\n/g, '\n• ')}</div>
                 </div>
               </div>
             ` : ''}
@@ -678,8 +775,8 @@ const ItineraryBuilder = () => {
         <div><strong>Email ID:</strong> Utkarsh@Vigovia.Com</div>
         <div><strong>CIN:</strong> U79110KA2024PTC191890</div>
       </div>
-      <div class="logo" style="font-size: 28px;">
-        <span class="viago" style="color: #2D1B69;">viago</span><span class="via" style="color: #7B68EE;">via</span>
+      <div class="footer-logo">
+        <span style="color: #2D3561;">viago</span><span style="color: #9370DB;">via</span>
       </div>
     </div>
   </div>
@@ -715,7 +812,7 @@ const ItineraryBuilder = () => {
       </div>
 
       {/* Progress Steps */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-center gap-4 mb-8">
           {[
             { num: 1, label: 'Basic Info' },
@@ -738,7 +835,7 @@ const ItineraryBuilder = () => {
         </div>
 
         {/* Form Content */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-5xl mx-auto min-h-[600px] max-h-[650px] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-5xl mx-auto min-h-[600px] max-h-[650px] overflow-hidden flex flex-col mb-6">
           {/* Step 1: Basic Information */}
           {step === 1 && (
             <div className="space-y-4 flex-1 flex flex-col">
@@ -1334,14 +1431,21 @@ const ItineraryBuilder = () => {
       </div>
 
       {/* Footer */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 mt-12">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <img src="/image.png" alt="Vigovia Logo" className="h-16 w-auto mx-auto mb-4" />
-          <div className="text-sm text-gray-300 space-y-1">
-            <p>Vigovia Tech Pvt. Ltd</p>
-            <p>Hd-109 Cinnabar Hills, Links Business Park, Karnataka, India</p>
-            <p>Phone: +91-9504061112 | Email: Utkarsh@Vigovia.Com</p>
-            <p className="text-xs text-gray-500 mt-2">CIN: U79110KA2024PTC191890</p>
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-6 mt-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center">
+            <div className="text-xs text-gray-300 space-y-1">
+              <p className="font-semibold text-gray-200">Vigovia Tech Pvt. Ltd</p>
+              <p>Hd-109 Cinnabar Hills, Links Business Park, Karnataka, India</p>
+            </div>
+            <div className="text-xs text-gray-300 text-right space-y-1">
+              <p><strong>Phone:</strong> +91-9504061112</p>
+              <p><strong>Email:</strong> Utkarsh@Vigovia.Com</p>
+              <p><strong>CIN:</strong> U79110KA2024PTC191890</p>
+            </div>
+            <div className="text-2xl font-bold">
+              <span style={{color: '#2D3561'}}>viago</span><span style={{color: '#9370DB'}}>via</span>
+            </div>
           </div>
         </div>
       </div>
