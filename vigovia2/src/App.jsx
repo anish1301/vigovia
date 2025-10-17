@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Download, Calendar, Users, Plane, Hotel, MapPin } from 'lucide-react';
+import { Plus, Minus, Download, Calendar, Users, Plane, Hotel, MapPin, AlertCircle } from 'lucide-react';
 
 const ItineraryBuilder = () => {
   const [step, setStep] = useState(1);
+  const [errors, setErrors] = useState({});
   const [formData, setFormData] = useState({
     clientName: '',
     destination: '',
@@ -20,13 +21,13 @@ const ItineraryBuilder = () => {
       }
     ],
     flights: [
-      { date: 'Thu 10 Jan 24', airline: 'Fly Air India (AX-123)', route: 'From Delhi (DEL) To Singapore (SIN).' }
+      { date: '', airline: 'Fly Air India (AX-123)', route: 'From Delhi (DEL) To Singapore (SIN).' }
     ],
     hotels: [
       {
         city: 'Singapore',
-        checkIn: '24/02/2024',
-        checkOut: '24/02/2024',
+        checkIn: '',
+        checkOut: '',
         nights: 2,
         hotelName: 'Super Townhouse Oak Vashi Formerly Blue Diamond'
       }
@@ -75,6 +76,51 @@ const ItineraryBuilder = () => {
     setFormData({ ...formData, days: newDays });
   };
 
+  // Date validation function
+  const validateDates = () => {
+    const newErrors = {};
+    
+    if (formData.departureDate && formData.arrivalDate) {
+      const depDate = new Date(formData.departureDate);
+      const arrDate = new Date(formData.arrivalDate);
+      
+      if (arrDate < depDate) {
+        newErrors.arrivalDate = 'Arrival date cannot be before departure date';
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Format date for display (YYYY-MM-DD to DD/MM/YYYY or readable format)
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr; // Return as-is if invalid
+    
+    const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options); // DD/MM/YYYY format
+  };
+
+  const formatDateLong = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+    
+    const options = { day: 'numeric', month: 'short', year: 'numeric' };
+    return date.toLocaleDateString('en-GB', options); // e.g., "10 Jan 2024"
+  };
+
+  // Update form data with date validation
+  const handleDateChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: null });
+    }
+  };
+
   const addFlight = () => {
     setFormData({
       ...formData,
@@ -90,6 +136,12 @@ const ItineraryBuilder = () => {
   };
 
   const generatePDF = () => {
+    // Validate dates before generating PDF
+    if (!validateDates()) {
+      alert('Please fix the date errors before generating the PDF');
+      return;
+    }
+
     const printWindow = window.open('', '_blank');
     const content = `
 <!DOCTYPE html>
@@ -395,11 +447,11 @@ const ItineraryBuilder = () => {
       </div>
       <div class="info-item">
         <div class="info-label">Departure</div>
-        <div class="info-value">${formData.departureDate}</div>
+        <div class="info-value">${formatDate(formData.departureDate)}</div>
       </div>
       <div class="info-item">
         <div class="info-label">Arrival</div>
-        <div class="info-value">${formData.arrivalDate}</div>
+        <div class="info-value">${formatDate(formData.arrivalDate)}</div>
       </div>
       <div class="info-item">
         <div class="info-label">Destination</div>
@@ -466,7 +518,7 @@ const ItineraryBuilder = () => {
         <tbody>
           ${formData.flights.map(flight => `
             <tr>
-              <td>${flight.date}</td>
+              <td>${formatDateLong(flight.date)}</td>
               <td><strong>${flight.airline}</strong> ${flight.route}</td>
             </tr>
           `).join('')}
@@ -490,8 +542,8 @@ const ItineraryBuilder = () => {
           ${formData.hotels.map(hotel => `
             <tr>
               <td>${hotel.city}</td>
-              <td>${hotel.checkIn}</td>
-              <td>${hotel.checkOut}</td>
+              <td>${formatDate(hotel.checkIn)}</td>
+              <td>${formatDate(hotel.checkOut)}</td>
               <td>${hotel.nights}</td>
               <td>${hotel.hotelName}</td>
             </tr>
@@ -571,9 +623,13 @@ const ItineraryBuilder = () => {
 
     printWindow.document.write(content);
     printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
+    
+    // Wait for content to load, then trigger print dialog
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 250);
+    };
   };
 
   return (
@@ -681,28 +737,41 @@ const ItineraryBuilder = () => {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Departure Date *</label>
                   <input
-                    type="text"
+                    type="date"
                     value={formData.departureDate}
-                    onChange={(e) => setFormData({ ...formData, departureDate: e.target.value })}
+                    onChange={(e) => handleDateChange('departureDate', e.target.value)}
                     className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                    placeholder="31/10/2025"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Arrival Date *</label>
                   <input
-                    type="text"
+                    type="date"
                     value={formData.arrivalDate}
-                    onChange={(e) => setFormData({ ...formData, arrivalDate: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
-                    placeholder="01/11/2025"
+                    onChange={(e) => handleDateChange('arrivalDate', e.target.value)}
+                    min={formData.departureDate}
+                    className={`w-full px-4 py-3 border-2 rounded-lg focus:outline-none ${
+                      errors.arrivalDate 
+                        ? 'border-red-500 focus:border-red-500' 
+                        : 'border-gray-200 focus:border-purple-500'
+                    }`}
                   />
+                  {errors.arrivalDate && (
+                    <div className="flex items-center gap-1 mt-1 text-red-600 text-sm">
+                      <AlertCircle size={14} />
+                      <span>{errors.arrivalDate}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <button
-                onClick={() => setStep(2)}
+                onClick={() => {
+                  if (validateDates()) {
+                    setStep(2);
+                  }
+                }}
                 className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-lg font-semibold hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg"
               >
                 Continue to Daily Itinerary →
@@ -834,14 +903,13 @@ const ItineraryBuilder = () => {
                   {formData.flights.map((flight, index) => (
                     <div key={index} className="grid grid-cols-3 gap-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
                       <input
-                        type="text"
+                        type="date"
                         value={flight.date}
                         onChange={(e) => {
                           const newFlights = [...formData.flights];
                           newFlights[index].date = e.target.value;
                           setFormData({ ...formData, flights: newFlights });
                         }}
-                        placeholder="Date"
                         className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                       />
                       <input
@@ -901,25 +969,24 @@ const ItineraryBuilder = () => {
                         className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                       />
                       <input
-                        type="text"
+                        type="date"
                         value={hotel.checkIn}
                         onChange={(e) => {
                           const newHotels = [...formData.hotels];
                           newHotels[index].checkIn = e.target.value;
                           setFormData({ ...formData, hotels: newHotels });
                         }}
-                        placeholder="Check In"
                         className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                       />
                       <input
-                        type="text"
+                        type="date"
                         value={hotel.checkOut}
                         onChange={(e) => {
                           const newHotels = [...formData.hotels];
                           newHotels[index].checkOut = e.target.value;
                           setFormData({ ...formData, hotels: newHotels });
                         }}
-                        placeholder="Check Out"
+                        min={hotel.checkIn}
                         className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:outline-none"
                       />
                       <input
